@@ -1,0 +1,32 @@
+# Agent instructions and harness config for working on this repo stay local.
+# Patterns are anchored to the root so the plugin, skill and adapter files Rimewire
+# ships (under plugins/, skills/, adapters/) are still tracked.
+/AGENTS.md
+/CLAUDE.md
+/CLAUDE.local.md
+/GEMINI.md
+/.claude/
+/.mcp.json
+/.codex/
+/.opencode/
+/opencode.json
+/opencode.jsonc
+/.pi/
+/.agents/
+/.gemini/
+/.cursor/
+/.cursorrules
+/.github/copilot-instructions.md
+
+# Node
+node_modules/
+coverage/
+*.tsbuildinfo
+
+# Python (wp-board/ reference)
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/

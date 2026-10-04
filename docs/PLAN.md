@@ -60,7 +60,11 @@ Each item in the Crosspane-specific list below becomes a config key with a gener
 - branch convention: `wp/<id>-…` → default `<prefix>/<id>-…` with a configurable prefix
 - the status vocabulary used by `classify()` → a default mapping, extendable per project
 - journal directory: `target/wp-notes/` → default `.rimewire/journal/`, configurable (Crosspane
-  keeps `target/wp-notes/`)
+  keeps `target/wp-notes/`). Journals stay inside each checkout, never in the main repo or the
+  user state directory: sandboxed shells can write only under their own worktree, and they cannot
+  reach the board over 127.0.0.1 (Claude Code's Linux sandbox gives commands a private localhost;
+  Codex blocks loopback by default). The CLI fallback therefore appends to the local journal file
+  and never calls the HTTP API.
 - branding: `BRAND_FILES` and the Crosspane name → project name and optional logo from config;
   Rimewire's own branding otherwise
 
@@ -92,7 +96,9 @@ worktrees. The web board is therefore a single shared process:
 - `rimewire mcp` starts and registers its project root (resolving worktrees to the main repo).
   Then it checks the lock file in the per-user state directory
   (`$XDG_STATE_HOME/rimewire/`, or the platform equivalent).
-- If no board server is alive, it spawns `rimewire serve --daemon` detached, bound to 127.0.0.1 on
+- After the MCP handshake (never before, so harness startup timeouts are not spent on it), if no
+  board server is alive, it spawns `rimewire serve --daemon` fully detached (new session via
+  `setsid`, inherited file descriptors closed), bound to 127.0.0.1 on
   the configured port (default 8737, with fallback to the next free port), and records the PID and
   port in the lock file.
 - The board server serves every registered project (a project switcher in the UI;
@@ -101,23 +107,46 @@ worktrees. The web board is therefore a single shared process:
 - `board_url` and the setup skill tell the user where the board is.
 
 This keeps "MCP running ⇒ board reachable" true without a system service, and survives sessions
-closing in any order.
+closing in any order. Harnesses tear MCP servers down differently: Codex and Pi signal the whole
+process group, and Claude Code can leave grandchildren orphaned. So the daemon must not share the
+MCP process group, and the MCP process must not rely on stdin EOF to notice shutdown; heartbeats
+and idle exit cover both cases.
+
+Harness MCP startup timeouts are short (Codex 10 s, OpenCode 5 s, Pi waits up to 10 s on the first
+prompt). A cold `npx` download can exceed them, so `rimewire install` installs the package globally
+and registers a bare `rimewire mcp` command, raising the timeout where the harness allows it.
 
 ### Harness adapters
 
 Adapters are thin. Each one registers the MCP server, installs the setup skill, and optionally
 installs hooks. All adapters share the same core and the same skill text.
 
-| Harness | MCP registration | Skill | Optional hooks |
-|---|---|---|---|
-| Claude Code | Plugin (`.claude-plugin/plugin.json` + `.mcp.json`), installable from a marketplace repo | Plugin `skills/` | Plugin `hooks/` (SessionStart, Stop, SubagentStop) |
-| Codex | `[mcp_servers.rimewire]` in `~/.codex/config.toml` | Codex skills directory | Verify what Codex offers |
-| OpenCode | `mcp` entry in `opencode.json` | OpenCode skills/agents | OpenCode plugin events |
-| Pi | Verify MCP support; fall back to the `rimewire` CLI | Pi skill/extension | Pi extension |
+Researched 2026-10-04 (Codex 0.160.0, OpenCode 1.18.34, Pi 1.0.2); re-check when each adapter is
+built.
+
+| Harness | MCP registration | Skill | Hooks | Packaging |
+|---|---|---|---|---|
+| Claude Code | Plugin `.mcp.json`; tools appear as `mcp__plugin_rimewire_rimewire__<tool>` | Plugin `skills/`, invoked as `/rimewire:rimewire-setup` | Plugin `hooks/hooks.json`: `SessionStart`, `SessionEnd`, `Stop`, `SubagentStop`, `PostToolUse`; `http` hooks can post to the board directly | Plugin + marketplace (`.claude-plugin/plugin.json`, `marketplace.json`) |
+| Codex | `[mcp_servers.rimewire]` in `~/.codex/config.toml` (project `.codex/config.toml` only in trusted projects); raise `startup_timeout_sec` | `~/.agents/skills/` or `.agents/skills/` | Same JSON format and events as Claude Code, but each hook must be trusted through `/hooks` before it runs; `SessionEnd` has a 1 s timeout | Plugins; the loader appears to accept the Claude plugin layout (unverified end to end) |
+| OpenCode | `mcp` in `opencode.json` (`"type": "local"`, `command` as an array, `timeout` default 5000 ms); tools appear as `rimewire_<tool>` | Reads `.opencode/skills`, `.claude/skills`, `.agents/skills` and their global equivalents | npm plugin: `session.created`, `session.idle`, `tool.execute.after`; no session-end or subagent-stop event (a subagent ending is `session.idle` on a child session) | npm plugin listed in the `plugin` config array; no manifest or marketplace |
+| Pi | Built-in MCP: `~/.pi/agent/mcp.json` or `.pi/mcp.json` (trusted projects), `mcpServers` format; must set `"exposure": "direct"` or the tools are hidden from the model | `~/.agents/skills/`, `.agents/skills/`, `~/.pi/agent/skills/` | TypeScript extension: `session_start`, `session_shutdown`, `agent_end`, `tool_result`; Pi has no subagents | `pi install npm:rimewire` with a `pi` key in `package.json` (skill + extension) |
+
+Consequences for the adapters:
+
+- `~/.agents/skills/rimewire-setup/` serves Codex, OpenCode and Pi; Claude Code gets the skill from
+  its plugin. Skill frontmatter stays portable: a lowercase-hyphen `name` equal to the directory
+  name, and a `description` of at most 1024 characters.
+- Tool names differ per harness, so the skill and the managed block refer to tools by bare name
+  (`post_update`), never by a harness prefix.
+- Try one plugin directory that serves both Claude Code and Codex before building a separate Codex
+  plugin.
+- Codex subagents may not receive the parent's stdio MCP tools (openai/codex#16475), which makes
+  the CLI fallback necessary there, not just a convenience.
+- Hook coverage is uneven, so hooks stay optional and post only notes and progress; completion
+  always comes from an explicit `ready`.
 
 `rimewire install <harness> [--project|--user]` writes these entries idempotently, and
-`rimewire uninstall <harness>` removes exactly what it wrote. Each harness's file locations and
-formats must be checked against its current documentation when its adapter is built.
+`rimewire uninstall <harness>` removes exactly what it wrote.
 
 The shipped plugin and skill files live under `plugins/` and `skills/`. This repository's root
 `.gitignore` ignores only root-level agent files, so it does not catch them.
@@ -134,14 +163,22 @@ The skill is one source file, rendered for each harness. It instructs the model 
    `.rimewire/config.toml`.
 4. Create the tracker from a template, or adapt an existing one, without losing content.
 5. Add the journal directory to the project's `.gitignore`.
+
+   Sandboxed models usually cannot write harness config (`.mcp.json`, `.claude/`, `.codex/`,
+   `.agents/`, `.git`). When a step needs one of those, the skill asks the user to run
+   `rimewire install` or to approve the write outside the sandbox.
 6. Insert or update a managed block between `<!-- rimewire:begin -->` and `<!-- rimewire:end -->`
    in each agent file. The block tells every agent and subagent to:
    - read the board before starting work
    - post `progress`, `blocker`, and `ready` updates with real content
-   - use the CLI when MCP is unavailable (for example, sandboxed workers)
+   - use the CLI when MCP is unavailable (for example, sandboxed workers or Codex subagents)
    - never put secrets or private prompt contents in updates
 
-   Re-running the skill replaces only the managed block.
+   Re-running the skill replaces only the managed block. The block goes in every agent file that
+   exists, because harnesses disagree on which one they read: Claude Code reads `AGENTS.md` only
+   when there is no `CLAUDE.md`, Codex reads only `AGENTS.md` (32 KiB cap), OpenCode uses the first
+   match, and Pi reads both. Where `CLAUDE.md` can import `AGENTS.md` (`@AGENTS.md`), one block in
+   `AGENTS.md` is enough.
 7. Show a summary of every file changed.
 
 ### Distribution
@@ -215,7 +252,13 @@ customized board plus updated agent files; a subagent posts an update that appea
 - 2026-10-04: one shared board server for all projects, with a project switcher.
 - 2026-10-04: TypeScript on Node.js, using official packages and external libraries, replacing the
   Python stdlib approach.
+- 2026-10-04: Pi is supported through its built-in MCP (with `"exposure": "direct"`), not a
+  CLI-only fallback.
 
 ## Open questions
 
-- Pi: confirm whether it supports MCP, or rely on the CLI (harness research in progress).
+- Does a Codex plugin load the Claude plugin layout unchanged, and which MCP file name does it use
+  (`.mcp.json` or `mcp.json`)?
+- Is openai/codex#16475 (subagents missing stdio MCP tools) fixed by the time Phase 5 starts?
+- Can an OpenCode plugin register its own MCP server and skill path through the `config` hook, so
+  one npm package covers OpenCode the way the plugin covers Claude Code?

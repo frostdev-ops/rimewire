@@ -40,6 +40,8 @@ Rimewire is part of [Frostdev](https://frostdev.io), alongside [Rimeward](https:
 | **Keep data local** | Run on your machine, with the web server bound to `127.0.0.1`. Rimewire needs no cloud service or model API. |
 | **Use your harness** | Integrate with Claude Code, Codex, OpenCode, and Pi. Sandboxed workers can use the local CLI. |
 
+Optional harness lifecycle hooks can automatically route activity to the package matching the current branch. Enable `[hooks] enabled = true` in project configuration; a fixed `package` is an optional override. Unmatched or ambiguous branches produce no package update.
+
 Completion is explicit: an agent or person posts `ready` after the work and checks pass. Session exit and optional activity hooks never establish completion. Later progress or a blocker reopens the package.
 
 ## Install
@@ -116,3 +118,5 @@ npm run format
 Checks cover types, tests, lint, and the packaged plugin build. Python 3 is needed for test-only reference parity checks; the shipped runtime is entirely Node.js. Tests use fixtures and temporary Git repositories. Optional harness and real-project checks are described in their adapter guides.
 
 Licensed under [GPL-3.0-or-later](LICENSE).
+
+Enabled lifecycle hooks also append a Git snapshot when the revision or changed-file count differs from the previous snapshot for that package. Snapshots store only the revision and file count, with `hook:GitSnapshot` provenance; they never copy paths, diffs, prompts, or transcripts, and never mark work ready.

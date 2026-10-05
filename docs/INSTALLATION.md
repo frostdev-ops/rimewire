@@ -71,7 +71,7 @@ rimewire install codex --user --hooks
 ```
 
 Codex requires review and trust through `/hooks`; installing never grants trust.
-All adapters require project `[hooks] enabled = true` and a real `package` selected
+All adapters require project `[hooks] enabled = true` and a real package inferred from the checkout branch or explicitly selected
 in `.rimewire/config.toml` before writing activity. Events append fixed notes with
 harness-specific `hook:<event>` provenance. They consume only the checkout path,
 never prompt, transcript, or tool output. Idle, agent-end, and session shutdown
@@ -80,3 +80,5 @@ without optional hooks.
 
 For adapter details and acceptance evidence, see [Codex](CODEX.md),
 [OpenCode](OPENCODE.md), and [Pi](PI.md).
+
+Enabled lifecycle hooks also append a Git snapshot when the revision or changed-file count differs from the previous snapshot for that package. Snapshots store only the revision and file count, with `hook:GitSnapshot` provenance; they never copy paths, diffs, prompts, or transcripts, and never mark work ready.

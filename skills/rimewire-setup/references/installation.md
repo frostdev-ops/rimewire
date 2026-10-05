@@ -87,7 +87,7 @@ an installed runtime and the shared skill. `rimewire uninstall <harness>` with t
 same scope removes owned registrations, preserving project board data and edited
 settings. `--hooks` installs optional Codex hooks, which need `/hooks` trust review.
 OpenCode and Pi adapters provide optional activity events; all hooks need project
-opt-in and a real selected work package. Use the installed CLI's help if using an
+opt-in and a real work package inferred from the checkout branch (or an explicit `hooks.package` override). Use the installed CLI's help if using an
 older package without these adapters.
 Keep shared user settings and other MCP registrations intact.
 

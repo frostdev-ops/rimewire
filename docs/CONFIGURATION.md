@@ -76,7 +76,8 @@ Hook-origin `ready` entries are rejected. Concurrent local writers append each J
 one `O_APPEND` write. Network filesystems that emulate append, and other writers that split
 records over multiple writes, are unsupported.
 
-Optional Claude activity hooks are configured with `[hooks]`, `enabled = true`,
-and `package = "<real-id>"`. The default is disabled. Hooks post fixed lifecycle
-notes with `hook:<event>` provenance, without copying private input or completing
-work. See [Claude plugin setup](CLAUDE_PLUGIN.md) for installation and hook details.
+Optional harness activity hooks are configured with `[hooks]`, `enabled = true`,
+and an optional `package = "<real-id>"` override. Otherwise the checkout branch
+selects a unique matching package. The default is disabled. Hooks post lifecycle
+notes and deduplicated Git revision/file-count snapshots, without copying private
+input or completing work. See [Claude plugin setup](CLAUDE_PLUGIN.md) for installation and hook details.

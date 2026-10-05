@@ -653,3 +653,11 @@ a.ext { color: var(--accent); }
 @media (max-width: 460px) {
   .rm-platforms { grid-template-columns: 1fr; }
 }
+
+/* Persistent cross-project navigation. */
+.project-panel { padding: 18px 22px; margin-bottom: 18px; }
+.project-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+.project-card { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid currentColor; border-radius: 10px; text-decoration: none; color: inherit; }
+.project-card:hover, .project-card:focus-visible { background: rgba(137,203,213,.12); }
+.project-card[aria-current="page"] { border-color: #89cbd5; background: rgba(137,203,213,.08); }
+.project-path { font-size: 12px; opacity: .7; overflow-wrap: anywhere; }

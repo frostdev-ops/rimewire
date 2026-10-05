@@ -58,7 +58,7 @@ CLI is unavailable. The helper embeds that installed runtime as a CLI fallback.
 
 ## Optional activity hooks
 
-Hooks do nothing until a project explicitly opts in and selects a real work package:
+Hooks run after a project opts in. They infer a real package from the checkout branch using the board's branch/worktree matching rules. Set `package` only to override that inference:
 
 ```toml
 [hooks]

@@ -299,6 +299,8 @@ describe("shared detached board lifecycle", () => {
       for (const [index, name] of ["Alpha", "Beta"].entries()) {
         const entry = listing.projects.find((entry) => entry.name === name);
         expect(entry).toMatchObject({
+          sessions: 1,
+          totals: expect.any(Object),
           root: realpathSync(roots[index]),
           url: new URL(boards[index]).pathname,
         });

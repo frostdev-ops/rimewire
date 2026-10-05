@@ -435,6 +435,10 @@ export async function runDaemon(
         projects: [...projects.values()].map(({ project, board }) => ({
           ...project,
           name: board.state.config.name,
+          sessions: [...sessions.values()].filter(
+            (session) => session.project === project.id,
+          ).length,
+          totals: board.state.board?.totals ?? null,
         })),
       });
       return;

@@ -1199,6 +1199,26 @@ async function loadProjects() {
     select.value = selected.url;
     select.title = selected.root;
     switcher.hidden = false;
+    $("#project-panel").hidden = false;
+    setText($("#project-count"), `· ${projects.length}`);
+    const cards = projects.map((project) => {
+      const link = document.createElement("a");
+      link.className = "project-card";
+      link.href = project.url;
+      if (project.id === projectId) link.setAttribute("aria-current", "page");
+      const name = document.createElement("strong");
+      name.textContent = project.name;
+      const path = document.createElement("span");
+      path.className = "project-path";
+      path.textContent = project.root;
+      const detail = document.createElement("span");
+      detail.className = "muted";
+      const totals = project.totals;
+      detail.textContent = `${project.sessions || 0} active sessions${totals ? ` · ${totals.done || 0}/${totals.counted || 0} complete · ${totals.percent || 0}%` : ""}${project.id === projectId ? " · Current board" : ""}`;
+      link.append(name, path, detail);
+      return link;
+    });
+    $("#project-grid").replaceChildren(...cards);
     projectRegistry.signature = signature;
   } catch {
     // Standalone servers have no registry; board loading and live updates still work.

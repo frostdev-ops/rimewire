@@ -141,11 +141,11 @@ package = "TASK-1"
 (nonempty string). Use an actual package from this project's tracker, not a phase,
 branch, or filesystem path. JSON input uses
 `"hooks": { "enabled": true, "package": "TASK-1" }`. Leave hooks absent or
-disabled when not requested. When enabling hooks, always set `package` explicitly.
+disabled when not requested. Omit `package` to infer it from the checkout branch using the configured branch conventions. Set it explicitly only to override inference. Unknown or ambiguous matches produce no update.
 Configuration accepts the package string; choosing a real ID is still the model's
 responsibility.
 
-Hooks append fixed lifecycle notes with `hook:<event>` provenance. They do not
+Hooks append fixed lifecycle notes with `hook:<event>` provenance and deduplicated revision/file-count snapshots with `hook:GitSnapshot` provenance. They do not
 post progress, because progress would reopen a completed package. A session,
 process, or subagent stopping cannot mark a package `ready`. Keep transcripts,
 prompts, tool input, and credentials out of hook payloads and journal notes.

@@ -80,6 +80,47 @@ describe("optional harness lifecycle hooks", () => {
     return readJournal(journalPath(checkout, config), "fixture", config);
   }
 
+  it("routes enabled hooks to the branch package without a fixed package", async () => {
+    rmSync(join(repo, ".git"), { recursive: true });
+    fixtureGit(repo, "init", "--initial-branch=work/TASK-2-parser");
+    write(
+      repo,
+      ".rimewire/config.toml",
+      `${settings}[hooks]\nenabled = true\n`,
+    );
+    await runHook("SessionStart", { cwd: repo });
+    expect(notes()).toHaveLength(2);
+    expect(notes()[0].wp).toBe("TASK-2");
+    expect(notes()[1]).toMatchObject({
+      source: "hook:GitSnapshot",
+      kind: "note",
+    });
+    await runHook("Stop", { cwd: repo });
+    expect(
+      notes().filter((entry) => entry.source === "hook:GitSnapshot"),
+    ).toHaveLength(1);
+    write(repo, "private-filename.txt", "private contents");
+    await runHook("Stop", { cwd: repo });
+    const snapshots = notes().filter(
+      (entry) => entry.source === "hook:GitSnapshot",
+    );
+    expect(snapshots).toHaveLength(2);
+    expect(snapshots[1].text).not.toContain("private");
+    expect(snapshots[1].percent).toBeNull();
+  });
+
+  it("does not route an unmatched branch to an arbitrary package", async () => {
+    rmSync(join(repo, ".git"), { recursive: true });
+    fixtureGit(repo, "init", "--initial-branch=main");
+    write(
+      repo,
+      ".rimewire/config.toml",
+      `${settings}[hooks]\nenabled = true\n`,
+    );
+    await runHook("SessionStart", { cwd: repo });
+    expect(notes()).toHaveLength(0);
+  });
+
   it.each(events)(
     "%s appends a bounded activity note with fixed provenance and author",
     async (event, text) => {
@@ -461,11 +502,13 @@ describe("optional harness lifecycle hooks", () => {
     rmSync(join(worker, "plans"), { recursive: true });
     mkdirSync(join(worker, "src", "nested"), { recursive: true });
     await runHook("SubagentStop", { cwd: join(worker, "src", "nested") });
-    expect(notes(worker)).toHaveLength(1);
+    expect(notes(worker)).toHaveLength(2);
     expect(notes()).toHaveLength(0);
     const board = build(repo);
-    expect(board.activity).toHaveLength(1);
-    expect(board.activity[0]).toMatchObject({
+    expect(board.activity).toHaveLength(2);
+    expect(
+      board.activity.find((entry) => entry.source === "hook:SubagentStop"),
+    ).toMatchObject({
       checkout: "actual-worker",
       kind: "note",
       source: "hook:SubagentStop",

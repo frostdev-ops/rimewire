@@ -3,8 +3,8 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
 import { build, everyItem } from "./board.js";
 import { type Config, loadConfig } from "./config.js";
-import { mainRepository } from "./gitinfo.js";
-import { append, make } from "./journal.js";
+import { git, mainRepository, matchWorktree } from "./gitinfo.js";
+import { append, journalPath, make, readJournal } from "./journal.js";
 import { isPackageId } from "./tracker.js";
 
 const messages = {
@@ -80,7 +80,26 @@ export async function runHook(
     const config = loadConfig(
       existsSync(join(checkout, ".rimewire", "config.toml")) ? checkout : repo,
     );
-    const wp = config.hooks.package;
+    if (config.hooks.enabled !== true) return;
+    let wp = config.hooks.package;
+    if (!wp) {
+      // Use the same branch/worktree convention as the board. Never guess from prompts.
+      const branch = git(checkout, ["symbolic-ref", "--short", "HEAD"])?.trim();
+      if (branch) {
+        const tree = {
+          path: checkout,
+          name: checkout.split(/[\\/]/).pop() ?? "",
+          branch,
+        };
+        const matches = new Set<string>();
+        for (const root of new Set([checkout, repo])) {
+          for (const item of everyItem(build(root, config, false))) {
+            if (matchWorktree(item, [tree], config)) matches.add(item.id);
+          }
+        }
+        if (matches.size === 1) wp = [...matches][0];
+      }
+    }
     if (
       config.hooks.enabled !== true ||
       typeof wp !== "string" ||
@@ -102,6 +121,36 @@ export async function runHook(
       ),
       config,
     );
+    // A single bounded read-only Git call captures facts, never file names or contents.
+    const status = git(checkout, [
+      "status",
+      "--porcelain=v2",
+      "--branch",
+      "--untracked-files=all",
+    ]);
+    if (status !== null) {
+      const lines = status.split("\n");
+      const revision = lines
+        .find((line) => line.startsWith("# branch.oid "))
+        ?.slice(13);
+      const changed = lines.filter((line) => /^[12u?] /.test(line)).length;
+      const text = `Git snapshot: revision ${revision && /^[a-f0-9]+$/.test(revision) ? revision.slice(0, 12) : "unborn"}; ${changed} changed or untracked files.`;
+      const previous = readJournal(
+        journalPath(checkout, config),
+        "local",
+        config,
+      )
+        .filter(
+          (entry) => entry.wp === wp && entry.source === "hook:GitSnapshot",
+        )
+        .at(-1);
+      if (previous?.text !== text)
+        append(
+          checkout,
+          make(wp, "note", text, null, "agent", "hook:GitSnapshot", config),
+          config,
+        );
+    }
     if (
       [
         "SessionStart",

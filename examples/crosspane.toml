@@ -1,0 +1,123 @@
+# Legacy Crosspane board configuration. All project-specific roadmap rules live here.
+name = "Crosspane"
+tracker = "docs/wp/README.md"
+# The tracker also contains three named aggregate rows. Their linked documents
+# remain excluded from untracked discovery, as in the original board.
+idPattern = '(WP-(?=[A-Z0-9])[A-Z]{0,3}\d*(?:\.\d+)?[a-z0-9]*|P\d+[a-z]?|C-P\d+|AUDIO-v0|CLIP-v0|GPU-v0)'
+branchPrefix = "wp"
+branchAliases = ["spike"]
+journalDir = "target/wp-notes"
+logo = "assets/brand/crosspane-mark-color.svg"
+
+[roadmap]
+fewRows = 10
+
+[[roadmap.platforms]]
+id = "linux"
+label = "Linux"
+tokens = ["linux", "hyprland", "both"]
+
+[[roadmap.platforms]]
+id = "macos"
+label = "macOS"
+tokens = ["macos", "mac", "both"]
+
+[[roadmap.platforms]]
+id = "windows"
+label = "Windows"
+tokens = ["windows"]
+note = "Phase 3. Only cross-compiled groundwork (W0) exists; the P9 spikes and all runtime work wait for a Windows machine."
+
+[[roadmap.platforms]]
+id = "shared"
+label = "OS-free / shared"
+tokens = []
+
+[[roadmap.milestones]]
+id = "phase-0"
+kind = "phase"
+title = "Phase 0: foundations and risk spikes"
+lane = '^Phase 0\b'
+
+[[roadmap.milestones]]
+id = "phase-1"
+kind = "phase"
+title = "Phase 1: secure link and E1 input sharing"
+lane = '^Phase 1\b'
+
+[[roadmap.milestones]]
+id = "phase-2"
+kind = "phase"
+title = "Phase 2: E2 window projection (2a Hyprland → Mac, 2b Mac → Hyprland)"
+lane = '^Phase 2\b'
+
+[[roadmap.milestones]]
+id = "mvp-gate"
+kind = "phase"
+title = "MVP gate: 05 scenarios 1–6 on the live pair"
+state = "active"
+note = "Owner-attended checklist in MVP-gate.md; the lead's unattended runs pass."
+doc = "MVP-gate.md"
+
+[[roadmap.milestones]]
+id = "phase-3"
+kind = "phase"
+title = "Phase 3: Windows and MVP+ features"
+lane = '^Phase 3\b'
+state = "active"
+note = "Lane A (clipboard, three nodes, drag) and Windows groundwork run now; Windows E1/E2/parking wait for a Windows machine (P9)."
+doc = "PHASE3.md"
+
+[[roadmap.milestones]]
+id = "phase-4"
+kind = "phase"
+title = "Phase 4: GNOME / KDE (portals), other wlroots, X11"
+state = "later"
+
+[[roadmap.milestones]]
+id = "phase-5"
+kind = "phase"
+title = "Phase 5: advanced media and features (M4 hosted apps, HDR, …)"
+state = "later"
+
+[[roadmap.milestones]]
+id = "installer-t1"
+kind = "track"
+title = "Installer Tier 1: fresh Mac and Hyprland end fully working"
+lane = '^Installer\b'
+exclude = '^WP-4\.(5b|5c|10|11|17|18)(?![0-9])'
+
+[[roadmap.milestones]]
+id = "installer-t2"
+kind = "track"
+title = "Installer Tier 2: distribution (DMG, Developer ID, Arch package, firewalld)"
+lane = '^Installer\b'
+include = '^WP-4\.(5b|5c|10|11|17|18)(?![0-9])'
+state = "later"
+note = "Starts after Tier 1 passes its attended gates (INSTALLER-rulings.md)."
+
+[[roadmap.milestones]]
+id = "drag-v0a"
+kind = "track"
+title = "DRAG v0-a: drags that start on the seat"
+lane = 'DRAG-v0'
+
+[[roadmap.milestones]]
+id = "drag-v0b"
+kind = "track"
+title = "DRAG v0-b: drags that start on the peer"
+state = "later"
+note = "Specified after v0-a's exit (DRAG-v0.md §6)."
+
+[[roadmap.milestones]]
+id = "audio-speakers"
+kind = "track"
+title = "Shared audio v0: speakers (D8)"
+lane = 'audio'
+
+[[roadmap.milestones]]
+id = "audio-mic"
+kind = "track"
+title = "Shared audio: microphones"
+state = "later"
+note = "Refused in v0 until indicator visibility and virtual-mic reset are designed (AUDIO-v0.md)."

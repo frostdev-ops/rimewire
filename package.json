@@ -1,0 +1,63 @@
+{
+  "name": "rimewire",
+  "version": "0.1.0",
+  "description": "Local project board for agent-assisted development",
+  "type": "module",
+  "bin": {
+    "rimewire": "dist/cli.js"
+  },
+  "exports": "./dist/board.js",
+  "files": [
+    "dist",
+    "static",
+    "examples",
+    "docs",
+    "skills",
+    "plugins",
+    "adapters"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/build-plugin.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "biome check src tests adapters package.json tsconfig*.json",
+    "format": "biome format --write src tests adapters package.json tsconfig*.json",
+    "check": "npm run typecheck && npm test && npm run lint && npm run build",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "commander": "^15.0.0",
+    "jsonc-parser": "^3.3.1",
+    "smol-toml": "^1.9.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "^24.19.1",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "pi": {
+    "extensions": [
+      "adapters/pi/index.mjs"
+    ],
+    "skills": [
+      "skills/rimewire-setup"
+    ]
+  },
+  "license": "GPL-3.0-or-later",
+  "author": "Frostdev",
+  "homepage": "https://github.com/frostdev-ops/rimewire",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frostdev-ops/rimewire.git"
+  },
+  "bugs": {
+    "url": "https://github.com/frostdev-ops/rimewire/issues"
+  }
+}

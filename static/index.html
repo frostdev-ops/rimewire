@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Rimewire · Work packages</title>
+  <base href="./">
+  <script>
+    // Resolve assets within this project even when its URL has no trailing slash.
+    const projectPath = location.pathname.match(/^\/p\/[^/]+/);
+    if (projectPath) document.querySelector("base").href = `${projectPath[0]}/`;
+  </script>
+  <link rel="icon" id="favicon" href="mark.png">
+  <link rel="stylesheet" href="board.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Rimewire work packages">
+      <img class="brand-mark" src="mark.png" alt="">
+      <span class="brand-word">Rimewire</span>
+    </a>
+    <span class="topbar-label">Work packages</span>
+    <label class="project-switcher" id="project-switcher" hidden>
+      <span>Project</span>
+      <select id="project-select" aria-label="Project"></select>
+    </label>
+    <div class="topbar-right">
+      <label class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+        <input id="search" type="search" placeholder="Search id, title, branch, OS" autocomplete="off" spellcheck="false">
+        <kbd>/</kbd>
+      </label>
+      <div class="live" id="live" data-state="connecting"><i></i><span>Connecting</span></div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero panel" id="hero">
+      <div class="hero-main">
+        <div class="section-label">Overall progress</div>
+        <div class="hero-row">
+          <div class="hero-percent"><span id="pct">0</span><small>%</small></div>
+          <div class="hero-sub">
+            <div><b id="done-n">0</b> of <b id="counted-n">0</b> work packages complete</div>
+            <div id="updated" class="muted">reading the tracker…</div>
+          </div>
+        </div>
+        <div class="bar big" id="bar" role="img" aria-label="Progress by status"></div>
+        <div class="chips" id="chips" role="toolbar" aria-label="Filter by status"></div>
+      </div>
+
+      <aside class="hero-side">
+        <div class="section-label">Owner actions <span id="owner-count"></span></div>
+        <ul class="owner" id="owner"></ul>
+      </aside>
+    </section>
+
+    <section class="roadmap panel" id="roadmap" hidden>
+      <header class="rm-head" id="rm-toggle" tabindex="0" role="button" aria-expanded="true" aria-controls="rm-body">
+        <h2>Roadmap</h2>
+        <span class="rm-sub">Completion by configured groups and milestones</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </header>
+      <div class="rm-body" id="rm-body">
+        <div class="section-label">By platform</div>
+        <div class="rm-platforms" id="rm-platforms"></div>
+        <div class="rm-cols">
+          <div>
+            <div class="section-label">By workstream</div>
+            <ol class="rm-streams" id="rm-streams"></ol>
+          </div>
+          <div>
+            <div class="section-label">Phases</div>
+            <ol class="rm-miles" id="rm-phases"></ol>
+            <div class="section-label rm-gap">Milestones</div>
+            <ol class="rm-miles" id="rm-tracks"></ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="banner" id="error" hidden></div>
+    <div class="newbar" id="newbar" hidden></div>
+
+    <div class="layout">
+      <div class="lanes" id="lanes"></div>
+      <aside class="feed">
+        <section class="panel feed-card">
+          <div class="section-label">Agent updates <span id="activity-count"></span></div>
+          <ol class="feed-list activity" id="activity"></ol>
+        </section>
+        <section class="panel feed-card">
+          <div class="section-label">Recent commits</div>
+          <ol class="feed-list" id="commits"></ol>
+        </section>
+        <section class="panel feed-card">
+          <div class="section-label">Recently edited specs</div>
+          <ol class="feed-list" id="recent"></ol>
+        </section>
+      </aside>
+    </div>
+    <footer class="foot" id="foot">Read from the project tracker and its spec files. Agents post updates with <code>rimewire</code> in their checkout.</footer>
+  </main>
+
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Work package details">
+    <button class="drawer-close" id="drawer-close" aria-label="Close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <div class="drawer-body" id="drawer-body"></div>
+  </aside>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="board.js" type="module"></script>
+</body>
+</html>

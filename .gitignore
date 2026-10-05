@@ -23,10 +23,20 @@ node_modules/
 coverage/
 *.tsbuildinfo
 
-# Python (wp-board/ reference)
+# Python test references
 __pycache__/
 *.py[cod]
 .venv/
 *.egg-info/
 dist/
 build/
+
+# Rimewire's own checkout-local updates
+/.rimewire/journal/
+
+# Reproducible plugin release assets (included in npm tarballs after build).
+/plugins/rimewire/dist/
+/plugins/rimewire/static/
+/plugins/rimewire/skills/
+
+/plugins/rimewire/adapters/

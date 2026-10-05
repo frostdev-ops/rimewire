@@ -1,0 +1,18 @@
+# Copy to your project's .rimewire/config.toml.
+name = "My project"
+tracker = "docs/board/README.md"
+idPattern = '[A-Za-z][A-Za-z0-9._-]*'
+branchPrefix = "work"
+journalDir = ".rimewire/journal"
+
+# Additional status prefixes, alongside the built-in vocabulary.
+[statuses]
+done = ["shipped"]
+active = ["building"]
+
+# Optional roadmap milestones select lanes by regular expression.
+[[roadmap.milestones]]
+id = "foundation"
+kind = "phase"
+title = "Foundation"
+lane = '^Foundation$'

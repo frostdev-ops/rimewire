@@ -1,0 +1,14 @@
+{
+  "name": "rimewire-local",
+  "owner": {
+    "name": "Rimewire"
+  },
+  "plugins": [
+    {
+      "name": "rimewire",
+      "source": "./rimewire",
+      "description": "Local project board, MCP server and setup skill"
+    }
+  ],
+  "description": "Rimewire local project board and agent harness integrations"
+}

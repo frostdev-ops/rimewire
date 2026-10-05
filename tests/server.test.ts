@@ -77,6 +77,45 @@ describe("board HTTP server", () => {
     });
   }
 
+  it("serves only the configured stylesheet and detects edits and escaping symlinks", async () => {
+    writeFileSync(join(repo, "custom.css"), ".panel { border-radius: 20px; }");
+    writeFileSync(
+      join(repo, ".rimewire/config.toml"),
+      'tracker = "docs/tasks/README.md"\nstylesheet = "custom.css"\n',
+    );
+    server.poll();
+    expect(
+      (await (await fetch(`${url}/api/board`)).json()).project.stylesheet,
+    ).toBe("/brand/custom.css");
+    expect(await (await fetch(`${url}/brand/custom.css`)).text()).toContain(
+      "20px",
+    );
+    writeFileSync(join(repo, "custom.css"), ".panel { border-radius: 40px; }");
+    expect(server.state.poll()).toBe(true);
+    expect(await (await fetch(`${url}/brand/custom.css`)).text()).toContain(
+      "40px",
+    );
+    rmSync(join(repo, "custom.css"));
+    writeFileSync(join(outside, "private.css"), "private");
+    symlinkSync(join(outside, "private.css"), join(repo, "custom.css"));
+    expect((await fetch(`${url}/brand/custom.css`)).status).toBe(404);
+  });
+
+  it("reloads and exposes palette and font settings with their browser module", async () => {
+    writeFileSync(
+      join(repo, ".rimewire/config.toml"),
+      'tracker = "docs/tasks/README.md"\n[palette]\nmode = "dark"\n[palette.dark]\naccent = "#89cbd5"\n[fonts]\nsans = "Georgia, serif"\n',
+    );
+    server.rebuild();
+    const board = await (await fetch(`${url}/api/board`)).json();
+    expect(board.project.palette.dark.accent).toBe("#89cbd5");
+    expect(board.project.fonts.sans).toBe("Georgia, serif");
+    expect((await fetch(`${url}/appearance.js`)).status).toBe(200);
+    expect((await fetch(`${url}/mark.png`)).headers.get("content-type")).toBe(
+      "image/png",
+    );
+  });
+
   it("serves the generic UI, configured project, package detail, docs, and HEAD", async () => {
     const home = await fetch(url);
     expect(home.headers.get("x-content-type-options")).toBe("nosniff");

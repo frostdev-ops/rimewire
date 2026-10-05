@@ -4,6 +4,7 @@ tracker = "docs/board/README.md"
 idPattern = '[A-Za-z][A-Za-z0-9._-]*'
 branchPrefix = "work"
 journalDir = ".rimewire/journal"
+# stylesheet = "assets/board.css" # Optional project-local styling for agent customization.
 
 # Additional status prefixes, alongside the built-in vocabulary.
 [statuses]
@@ -16,3 +17,19 @@ id = "foundation"
 kind = "phase"
 title = "Foundation"
 lane = '^Foundation$'
+
+# Fully custom colors; shared values apply in both modes.
+[palette]
+mode = "auto" # auto, light, or dark
+[palette.colors]
+accent = "#89cbd5"
+[palette.light]
+background = "#f5f7f9"
+text = "#17212b"
+[palette.dark]
+background = "#0d141b"
+text = "#e4eaf0"
+
+[fonts]
+sans = 'Inter, system-ui, sans-serif'
+mono = '"JetBrains Mono", ui-monospace, monospace'

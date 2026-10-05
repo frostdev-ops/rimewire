@@ -20,6 +20,8 @@ const STATIC_FILES: Record<string, [string, string]> = {
   "/": ["index.html", "text/html; charset=utf-8"],
   "/index.html": ["index.html", "text/html; charset=utf-8"],
   "/board.js": ["board.js", "text/javascript; charset=utf-8"],
+  "/appearance.js": ["appearance.js", "text/javascript; charset=utf-8"],
+  "/mark.png": ["mark.png", "image/png"],
   "/board.css": ["board.css", "text/css; charset=utf-8"],
   "/mark.svg": ["mark.svg", "image/svg+xml"],
 };
@@ -113,7 +115,13 @@ export class BoardState {
     let next: string;
     try {
       const config = this.options.config ?? loadConfig(this.repo);
-      next = JSON.stringify([config, signature(this.repo, config)]);
+      const stylesheet =
+        config.stylesheet && safeFile(this.repo, this.repo, config.stylesheet);
+      next = JSON.stringify([
+        config,
+        signature(this.repo, config),
+        stylesheet ? readFileSync(stylesheet, "utf8") : null,
+      ]);
     } catch (error) {
       next = `error:${error instanceof Error ? error.message : "unavailable"}`;
     }
@@ -131,6 +139,9 @@ export class BoardState {
           name: this.config.name,
           tracker: this.config.tracker,
           journalDir: this.config.journalDir,
+          palette: this.config.palette,
+          fonts: this.config.fonts,
+          stylesheet: this.config.stylesheet ? "/brand/custom.css" : null,
           logo: this.config.logo ? "/brand/mark.svg" : null,
         },
         version: this.version,
@@ -328,6 +339,12 @@ export function createBoardServer(
         const target = logo && type && safeFile(state.repo, state.repo, logo);
         if (!target || !type) json(req, res, { error: "unknown logo" }, 404);
         else bytes(req, res, readFileSync(target), type);
+      } else if (path === "/brand/custom.css") {
+        const stylesheet = state.config.stylesheet;
+        const target =
+          stylesheet && safeFile(state.repo, state.repo, stylesheet);
+        if (!target) json(req, res, { error: "unknown stylesheet" }, 404);
+        else bytes(req, res, readFileSync(target), "text/css; charset=utf-8");
       } else if (path === "/api/board") {
         const snapshot = state.snapshot();
         json(

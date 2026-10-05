@@ -12,6 +12,28 @@ import { describe, expect, it } from "vitest";
 import { defaultConfig, loadConfig, parseConfig } from "../src/config.js";
 
 describe("project configuration", () => {
+  it("validates appearance without accepting arbitrary CSS", () => {
+    expect(defaultConfig().palette).toEqual({
+      mode: "auto",
+      colors: {},
+      light: {},
+      dark: {},
+    });
+    expect(
+      parseConfig({
+        palette: { dark: { accent: "#89cbd5" } },
+        fonts: { sans: "Inter, system-ui" },
+      }).fonts.sans,
+    ).toBe("Inter, system-ui");
+    for (const input of [
+      { palette: { mode: "night" } },
+      { palette: { light: { accent: "url(https://example.com)" } } },
+      { palette: { dark: { typo: "#fff" } } },
+      { fonts: { sans: "Inter; color: red" } },
+      { fonts: { mono: "" } },
+    ])
+      expect(() => parseConfig(input)).toThrow();
+  });
   it("keeps the shipped example valid", () => {
     const config = parseConfig(
       parse(

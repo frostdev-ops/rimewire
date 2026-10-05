@@ -1,3 +1,9 @@
+import { applyAppearance } from "./appearance.js";
+const appearanceMedia = matchMedia("(prefers-color-scheme: dark)");
+appearanceMedia.addEventListener("change", () => {
+  applyAppearance(document.documentElement, state.board?.project, appearanceMedia.matches);
+  if (state.board) favicon(state.board.totals);
+});
 // Rimewire work-package board. Talks only to the local board server.
 // Rendering is incremental: each card, lane and feed list is rebuilt only when its data changed.
 
@@ -1099,6 +1105,7 @@ function showError(text) {
 }
 
 function render(reason) {
+  applyAppearance(document.documentElement, state.board.project, appearanceMedia.matches);
   renderHero();
   renderRoadmap();
   renderNewbar();
@@ -1108,6 +1115,19 @@ function render(reason) {
   setText($(".brand-word"), name);
   $(".brand").setAttribute("aria-label", `${name} work packages`);
   const project = state.board.project;
+  let stylesheet = document.querySelector("#project-stylesheet");
+  if (project?.stylesheet) {
+    if (!stylesheet) {
+      stylesheet = document.createElement("link");
+      stylesheet.id = "project-stylesheet";
+      stylesheet.rel = "stylesheet";
+      stylesheet.addEventListener("load", () => { if (state.board) favicon(state.board.totals); });
+      document.head.append(stylesheet);
+    }
+    const href = new URL(projectURL(project.stylesheet), location.origin);
+    href.searchParams.set("v", state.board.version);
+    if (stylesheet.href !== href.href) stylesheet.href = href.href;
+  } else stylesheet?.remove();
   const logo = new URL(projectURL(project?.logo || "mark.png"), location.origin);
   if (project?.logo) logo.searchParams.set("v", state.board.version);
   $(".brand-mark").src = logo.href;
@@ -1134,34 +1154,36 @@ function connect() {
 }
 
 function favicon(t) {
-  const sig = `${t.done}/${t.active}/${t.counted}`;
+  const styles = getComputedStyle(document.documentElement);
+  const color = (key) => styles.getPropertyValue(key).trim();
+  const sig = JSON.stringify([t.done, t.active, t.counted, t.percent, ...["--surface", "--line", "--c-active", "--c-done", "--text", "--sans"].map(color)]);
   if (state.faviconSig === sig) return;
   state.faviconSig = sig;
   const c = document.createElement("canvas");
   c.width = c.height = 64;
   const g = c.getContext("2d");
-  g.fillStyle = "#131c25";
+  g.fillStyle = color("--surface");
   g.beginPath();
   g.arc(32, 32, 31, 0, Math.PI * 2);
   g.fill();
   g.lineWidth = 8;
-  g.strokeStyle = "#26333f";
+  g.strokeStyle = color("--line");
   g.beginPath();
   g.arc(32, 32, 23, 0, Math.PI * 2);
   g.stroke();
   const start = -Math.PI / 2;
   const doneEnd = start + (t.counted ? t.done / t.counted : 0) * Math.PI * 2;
   const activeEnd = doneEnd + (t.counted ? t.active / t.counted : 0) * Math.PI * 2;
-  g.strokeStyle = "#5a9df0";
+  g.strokeStyle = color("--c-active");
   g.beginPath();
   g.arc(32, 32, 23, doneEnd, activeEnd);
   g.stroke();
-  g.strokeStyle = "#3fb67f";
+  g.strokeStyle = color("--c-done");
   g.beginPath();
   g.arc(32, 32, 23, start, doneEnd);
   g.stroke();
-  g.fillStyle = "#e4eaf0";
-  g.font = "600 17px system-ui, sans-serif";
+  g.fillStyle = color("--text");
+  g.font = `600 17px ${color("--sans")}`;
   g.textAlign = "center";
   g.textBaseline = "middle";
   g.fillText(String(Math.floor(t.percent)), 32, 33);

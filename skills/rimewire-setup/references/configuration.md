@@ -170,3 +170,22 @@ prompts, tool input, and credentials out of hook payloads and journal notes.
 Do not automatically replace an existing tracker with the template. Adapt only
 the structure the parser needs, or keep the original document and link it from
 the configured tracker when its format must remain intact.
+
+## Fully custom appearance
+
+Survey existing project branding and customize `palette` and `fonts` alongside the
+tracker configuration. `palette` has `mode` (`auto`, `light`, `dark`), shared `colors`,
+and per-mode `light` / `dark` color objects. Mode-specific values override shared
+colors. Each color object accepts hexadecimal values for `background`, `surface`,
+`surfaceAlt`, `border`, `borderSoft`, `text`, `textSecondary`, `muted`, `accent`,
+`accentSoft`, `focus`, `highlight`, `done`, `active`, `spec`, `planned`, `blocked`,
+`aside`, `ready`, and `onSolid`. `fonts` accepts `sans` and `mono` local-family stacks.
+Keep omitted settings at their defaults; use readable foreground/background pairs.
+
+For customization beyond those tokens, write a project-local CSS file and set the
+root `stylesheet` key to its relative `.css` path. Agents can customize components,
+layout and typography, and embed `@font-face` font data. CSS loads after the board's
+base styles; inline config variables need `!important` to override from CSS.
+Never edit Rimewire's shipped styles to customize a user's project. Complete setup
+JSON must include appearance values when changing them; rerun setup or edit the
+project TOML to apply the customization. The live board reloads config and CSS edits.

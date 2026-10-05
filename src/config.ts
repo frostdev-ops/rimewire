@@ -50,6 +50,46 @@ const milestone = z
     exclude: pattern.optional(),
   })
   .strict();
+const color = z
+  .string()
+  .regex(
+    /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/,
+    "Use a hexadecimal CSS color",
+  );
+const colors = z
+  .object({
+    background: color.optional(),
+    surface: color.optional(),
+    surfaceAlt: color.optional(),
+    border: color.optional(),
+    borderSoft: color.optional(),
+    text: color.optional(),
+    textSecondary: color.optional(),
+    muted: color.optional(),
+    accent: color.optional(),
+    accentSoft: color.optional(),
+    focus: color.optional(),
+    highlight: color.optional(),
+    done: color.optional(),
+    active: color.optional(),
+    spec: color.optional(),
+    planned: color.optional(),
+    blocked: color.optional(),
+    aside: color.optional(),
+    ready: color.optional(),
+    onSolid: color.optional(),
+  })
+  .strict()
+  .default({});
+const fontStack = z
+  .string()
+  .trim()
+  .min(1)
+  .max(500)
+  .regex(
+    /^[A-Za-z0-9 _,'"-]+$/,
+    "Use a comma-separated local font family stack",
+  );
 const schema = z
   .object({
     name: z.string().min(1).default("Rimewire"),
@@ -59,6 +99,28 @@ const schema = z
     branchAliases: z.array(z.string().min(1)).default([]),
     journalDir: localPath.default(".rimewire/journal"),
     logo: localPath.optional(),
+    palette: z
+      .object({
+        mode: z.enum(["auto", "light", "dark"]).default("auto"),
+        colors,
+        light: colors,
+        dark: colors,
+      })
+      .strict()
+      .default({ mode: "auto", colors: {}, light: {}, dark: {} }),
+    stylesheet: localPath
+      .refine(
+        (value) => value.endsWith(".css"),
+        "Use a project-relative .css file",
+      )
+      .optional(),
+    fonts: z
+      .object({
+        sans: fontStack.optional(),
+        mono: fontStack.optional(),
+      })
+      .strict()
+      .default({}),
     hooks: z
       .object({
         enabled: z.boolean().default(false),

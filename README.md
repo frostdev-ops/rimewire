@@ -3,14 +3,14 @@
 </p>
 
 <p align="center">
-  <strong>Your agents. One shared picture of the work.</strong><br>
-  A local MCP server and live project board for plans, progress, blockers, and review handoffs.
+  <strong>Many agents. One clear view.</strong><br>
+  Plans, progress, blockers, and review handoffs. Live on your machine.
 </p>
 
 <p align="center">
   <a href="#install">Get started</a> ·
-  <a href="docs/CONFIGURATION.md">Customize your board</a> ·
-  <a href="docs/INSTALLATION.md">Harness setup</a> ·
+  <a href="#see-it-move">See the board</a> ·
+  <a href="docs/CONFIGURATION.md">Make it yours</a> ·
   <a href="https://github.com/frostdev-ops/rimewire/issues">Report an issue</a>
 </p>
 
@@ -23,30 +23,46 @@
 
 ## Keep the work in view
 
-When several agents work across sessions and Git worktrees, progress gets scattered. Rimewire puts the project's tracker, active branches, updates, blockers, and handoffs on one live board. Agents read and update it through MCP; you follow along in your browser.
+Turn scattered agent sessions and Git worktrees into one live project board. Agents share context through a local MCP server; you follow the work in your browser.
 
-Install it into your harness, then run the bundled setup skill. The agent adapts the board to your project's tracker, package IDs, phases, status vocabulary, and branch conventions. It adds managed instructions to your project's agent files so future agents and subagents keep the board current.
+<p align="center">
+  <img src="assets/readme/connected-work.png" alt="Separate crystalline strands joining into one shared Frostdev network" width="960">
+</p>
 
-Rimewire is part of [Frostdev](https://frostdev.io), alongside [Rimeward](https://github.com/frostdev-ops/rimeward), [Frostsim](https://github.com/frostdev-ops/frostsim), and [Crosspane](https://github.com/frostdev-ops/crosspane).
+| Shared context | Visible progress | Yours to shape |
+| --- | --- | --- |
+| Specs, dependencies, and updates across checkouts. | Live status, branches, blockers, and review handoffs. | Your tracker, your branding, local data. No cloud service or model API required. |
 
-## What you can do
+Works with **Claude Code, Codex, OpenCode, and Pi**. Sandboxed agents can post updates through the local CLI.
 
-| | In Rimewire |
-| --- | --- |
-| **Follow the project** | See phases, work packages, progress, dependencies, and open blockers on a live web board. |
-| **Coordinate agents** | Read specs and recent updates, post progress, and leave review handoffs through five MCP tools. |
-| **Work across checkouts** | Merge checkout-local journals into a shared view of branches and Git worktrees. |
-| **Make it yours** | Configure tracker paths, IDs, statuses, milestones, project name, and branding. |
-| **Keep data local** | Run on your machine, with the web server bound to `127.0.0.1`. Rimewire needs no cloud service or model API. |
-| **Use your harness** | Integrate with Claude Code, Codex, OpenCode, and Pi. Sandboxed workers can use the local CLI. |
+## See it move
 
-Optional harness lifecycle hooks can automatically route activity to the package matching the current branch. Enable `[hooks] enabled = true` in project configuration; a fixed `package` is an optional override. Unmatched or ambiguous branches produce no package update.
+<p align="center">
+  <a href="assets/readme/goldens/board-overview.png"><img src="assets/readme/board-demo.gif" alt="Rimewire live board: an agent posts progress, raises a blocker, resolves it, and hands work off for review" width="960"></a>
+</p>
 
-Completion is explicit: an agent or person posts `ready` after the work and checks pass. Session exit and optional activity hooks never establish completion. Later progress or a blocker reopens the package.
+*A Frostdev demo project, captured from the running board. Click for a still view.*
+
+<details>
+<summary>Explore the board</summary>
+
+**The whole project at a glance**
+
+![Project lanes, progress, branches, and agent updates](assets/readme/goldens/board-overview.png)
+
+**Blockers with context**
+
+![Work package details with an agent blocker and update history](assets/readme/goldens/board-blocker.png)
+
+**A clear handoff for review**
+
+![Completed acceptance checks and an explicit ready-for-review handoff](assets/readme/goldens/board-ready.png)
+
+</details>
 
 ## Install
 
-Requires **Node.js 24+** and npm. Install from source:
+Requires **Node.js 24+** and npm. Build and install from source:
 
 ```sh
 git clone https://github.com/frostdev-ops/rimewire.git
@@ -56,7 +72,7 @@ npm run build
 npm install --global .
 ```
 
-Keep the built checkout available: harness registrations use absolute paths to the installed runtime. Rebuild and rerun registration after updating or moving it. A packaged alternative is `npm pack`, followed by `npm install --global ./rimewire-0.1.0.tgz`. This repository's publication does not imply an npm registry release.
+Keep the installed checkout available; rerun harness registration after updates or moves.
 
 ### Codex, OpenCode, or Pi
 
@@ -68,9 +84,9 @@ rimewire install opencode --user
 rimewire install pi --user
 ```
 
-Restart the harness in your project and ask it to run **`rimewire-setup`**. The skill surveys the project, creates or adapts the tracker, writes `.rimewire/config.toml`, and updates managed agent instructions. Ask for **`board_url`** to open your board.
+Restart your harness in the project, run **`rimewire-setup`**, then ask for **`board_url`**. Setup adapts the tracker, board, and agent instructions to your project.
 
-Use `--project` instead of `--user` for a checkout-specific installation. See the [installation guide](docs/INSTALLATION.md) for configuration paths, optional hooks, preservation, and uninstall commands.
+Use `--project` for checkout-specific registration. [Installation and removal →](docs/INSTALLATION.md)
 
 ### Claude Code
 
@@ -81,11 +97,11 @@ claude plugin marketplace add "$PWD/plugins"
 claude plugin install rimewire@rimewire-local
 ```
 
-Restart Claude Code in your project, run **`/rimewire:rimewire-setup`**, then ask for `board_url`. Use a current Claude Code release with exec-form hooks (2.1.207+). See the [plugin guide](docs/CLAUDE_PLUGIN.md).
+Restart Claude Code in your project, run **`/rimewire:rimewire-setup`**, then ask for **`board_url`**. [Plugin guide →](docs/CLAUDE_PLUGIN.md)
 
 ## A few useful commands
 
-Run these from your project checkout after setup; use real IDs from your tracker:
+From your configured project, using IDs from your tracker:
 
 ```sh
 rimewire list
@@ -95,17 +111,15 @@ rimewire ready TASK-1 --text "Acceptance checks passed"
 rimewire serve --repo .
 ```
 
-The CLI appends updates to a journal inside the current checkout, which lets sandboxed workers report without networking. Keep journals gitignored. Project configuration and Markdown trackers can be versioned normally.
-
-MCP sessions automatically share a local web daemon. It stays available while sessions hold heartbeat leases, then exits after an idle grace period. The actual address comes from `board_url`.
+Post `ready` after checks pass. Later progress or blockers reopen the package. Keep checkout-local journals gitignored; version your config and tracker.
 
 ## Documentation
 
-- [Harness installation and removal](docs/INSTALLATION.md)
-- [Project configuration](docs/CONFIGURATION.md) and [example tracker](examples/tracker.md)
-- [MCP tools and manual registration](docs/MCP.md)
-- [Shared board lifecycle](docs/LIFECYCLE.md)
-- [Claude Code](docs/CLAUDE_PLUGIN.md), [Codex](docs/CODEX.md), [OpenCode](docs/OPENCODE.md), and [Pi](docs/PI.md)
+| Start here | Go deeper |
+| --- | --- |
+| [Installation and removal](docs/INSTALLATION.md) | [MCP tools](docs/MCP.md) |
+| [Configuration](docs/CONFIGURATION.md) · [Example tracker](examples/tracker.md) | [Board lifecycle](docs/LIFECYCLE.md) |
+| [Claude Code](docs/CLAUDE_PLUGIN.md) · [Codex](docs/CODEX.md) | [OpenCode](docs/OPENCODE.md) · [Pi](docs/PI.md) |
 
 ## Development
 
@@ -115,8 +129,12 @@ npm run check
 npm run format
 ```
 
-Checks cover types, tests, lint, and the packaged plugin build. Python 3 is needed for test-only reference parity checks; the shipped runtime is entirely Node.js. Tests use fixtures and temporary Git repositories. Optional harness and real-project checks are described in their adapter guides.
+`check` covers types, tests, lint, and the plugin build. **Python 3** is needed for test-only reference checks; the runtime is Node.js. [Regenerate the demo and goldens →](assets/readme/README.md)
 
-Licensed under [GPL-3.0-or-later](LICENSE).
+## Contributing
 
-Enabled lifecycle hooks also append a Git snapshot when the revision or changed-file count differs from the previous snapshot for that package. Snapshots store only the revision and file count, with `hook:GitSnapshot` provenance; they never copy paths, diffs, prompts, or transcripts, and never mark work ready.
+[Open an issue](https://github.com/frostdev-ops/rimewire/issues) with reproduction steps, or send a focused PR with relevant checks and docs. Run `npm run check` before submitting.
+
+---
+
+Part of [Frostdev](https://frostdev.io), alongside [Rimeward](https://github.com/frostdev-ops/rimeward), [Frostsim](https://github.com/frostdev-ops/frostsim), and [Crosspane](https://github.com/frostdev-ops/crosspane). Licensed under [GPL-3.0-or-later](LICENSE).
